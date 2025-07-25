@@ -508,6 +508,17 @@ class UserAvatar extends StatelessWidget {
                     <h2 class="text-3xl font-bold text-slate-800">✨ AI 어시스턴트</h2>
                     <p class="mt-2 text-slate-500">Gemini AI를 활용하여 개발 생산성을 높여보세요.</p>
                 </div>
+
+                <div class="card p-6 mb-8 bg-indigo-50 border border-indigo-200">
+                    <h3 class="text-xl font-bold mb-4">API 키 설정</h3>
+                    <p class="text-slate-600 mb-4">AI 어시스턴트 기능을 사용하려면 본인의 Google AI Studio API 키를 입력해주세요. 키는 브라우저에만 저장되며, 서버로 전송되지 않습니다.</p>
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-2">
+                        <input type="password" id="api-key-input" class="flex-grow w-full px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" placeholder="API 키를 여기에 붙여넣으세요">
+                        <button id="save-api-key" class="w-full sm:w-auto bg-indigo-600 text-white font-bold py-2 px-4 rounded-md hover:bg-indigo-700 transition-colors">저장</button>
+                    </div>
+                    <p id="api-key-status" class="text-sm mt-2 hidden"></p>
+                </div>
+
                 <div class="grid md:grid-cols-2 gap-8">
                     <div class="card p-6">
                         <h3 class="text-xl font-bold mb-4">Jira 스토리 자동 생성</h3>
@@ -554,6 +565,34 @@ class UserAvatar extends StatelessWidget {
 
             const tabs = document.querySelectorAll('.tab-button');
             const contents = document.querySelectorAll('.content-section');
+            const apiKeyInput = document.getElementById('api-key-input');
+            const saveApiKeyBtn = document.getElementById('save-api-key');
+            const apiKeyStatus = document.getElementById('api-key-status');
+
+            // Load saved API key from localStorage
+            const savedApiKey = localStorage.getItem('geminiApiKey');
+            if (savedApiKey) {
+                apiKeyInput.value = savedApiKey;
+                apiKeyStatus.textContent = '저장된 API 키를 사용합니다.';
+                apiKeyStatus.classList.remove('hidden', 'text-red-600');
+                apiKeyStatus.classList.add('text-green-600');
+            }
+
+            saveApiKeyBtn.addEventListener('click', () => {
+                const key = apiKeyInput.value.trim();
+                if (key) {
+                    localStorage.setItem('geminiApiKey', key);
+                    apiKeyStatus.textContent = 'API 키가 성공적으로 저장되었습니다.';
+                    apiKeyStatus.classList.remove('hidden', 'text-red-600');
+                    apiKeyStatus.classList.add('text-green-600');
+                } else {
+                    localStorage.removeItem('geminiApiKey');
+                    apiKeyStatus.textContent = 'API 키가 제거되었습니다.';
+                    apiKeyStatus.classList.remove('hidden', 'text-green-600');
+                    apiKeyStatus.classList.add('text-red-600');
+                }
+                setTimeout(() => apiKeyStatus.classList.add('hidden'), 3000);
+            });
 
             tabs.forEach(tab => {
                 tab.addEventListener('click', () => {
@@ -614,6 +653,11 @@ class UserAvatar extends StatelessWidget {
             const jiraOutputDiv = document.getElementById('jira-output');
 
             generateJiraBtn.addEventListener('click', async () => {
+                const apiKey = apiKeyInput.value.trim();
+                if (!apiKey) {
+                    jiraOutputDiv.innerHTML = '<p class="text-red-600">AI 어시스턴트를 사용하려면 먼저 API 키를 입력하고 저장해주세요.</p>';
+                    return;
+                }
                 const promptText = jiraPromptInput.value.trim();
                 if (!promptText) {
                     jiraOutputDiv.innerHTML = '<p>생성할 기능에 대한 설명을 입력해주세요.</p>';
@@ -642,11 +686,11 @@ class UserAvatar extends StatelessWidget {
                 jiraOutputDiv.innerHTML = '';
 
                 try {
-                    const resultText = await callGemini(fullPrompt);
+                    const resultText = await callGemini(fullPrompt, apiKey);
                     jiraOutputDiv.innerHTML = marked.parse(resultText);
                 } catch (error) {
                     console.error('Error calling Gemini API:', error);
-                    jiraOutputDiv.innerHTML = '<p>Jira 티켓 생성 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.</p>';
+                    jiraOutputDiv.innerHTML = '<p class="text-red-600">Jira 티켓 생성 중 오류가 발생했습니다. API 키가 올바른지 확인해주세요.</p>';
                 } finally {
                     toggleButtonLoading(generateJiraBtn, false);
                 }
@@ -657,6 +701,11 @@ class UserAvatar extends StatelessWidget {
             const reviewOutputDiv = document.getElementById('review-output');
 
             generateReviewBtn.addEventListener('click', async () => {
+                 const apiKey = apiKeyInput.value.trim();
+                if (!apiKey) {
+                    reviewOutputDiv.innerHTML = '<p class="text-red-600">AI 어시스턴트를 사용하려면 먼저 API 키를 입력하고 저장해주세요.</p>';
+                    return;
+                }
                 const codeText = codeReviewInput.value.trim();
                 if (!codeText) {
                     reviewOutputDiv.innerHTML = '<p>리뷰할 코드를 입력해주세요.</p>';
@@ -683,11 +732,11 @@ class UserAvatar extends StatelessWidget {
                 reviewOutputDiv.innerHTML = '';
 
                 try {
-                    const resultText = await callGemini(fullPrompt);
+                    const resultText = await callGemini(fullPrompt, apiKey);
                     reviewOutputDiv.innerHTML = marked.parse(resultText);
                 } catch (error) {
                     console.error('Error calling Gemini API:', error);
-                    reviewOutputDiv.innerHTML = '<p>코드 리뷰 생성 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.</p>';
+                    reviewOutputDiv.innerHTML = '<p class="text-red-600">코드 리뷰 생성 중 오류가 발생했습니다. API 키가 올바른지 확인해주세요.</p>';
                 } finally {
                     toggleButtonLoading(generateReviewBtn, false);
                 }
@@ -707,11 +756,10 @@ class UserAvatar extends StatelessWidget {
                 }
             }
             
-            async function callGemini(prompt) {
+            async function callGemini(prompt, apiKey) {
                 let chatHistory = [];
                 chatHistory.push({ role: "user", parts: [{ text: prompt }] });
                 const payload = { contents: chatHistory };
-                const apiKey = ""; 
                 const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
                 
                 const response = await fetch(apiUrl, {

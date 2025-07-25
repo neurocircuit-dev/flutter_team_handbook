@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flutter 팀 핸드북</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/dart.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <!-- Chosen Palette: Calm Neutrals (Tailwind Slate) with a soft Indigo accent. -->
+    <!-- Application Structure Plan: A tab-based single-page application is chosen to organize the handbook into high-level themes: 'Philosophy & Management' and 'Development Standards (SOP)'. A 'Quick Reference' tab provides practical tools. A new 'AI Assistant' tab is added, powered by the Gemini API, to offer interactive, intelligent tools like a Jira ticket generator and code review helper, making the handbook a dynamic aid in the development workflow. -->
+    <!-- Visualization & Content Choices: 
+        - Jira Hierarchy: Interactive HTML/CSS diagram.
+        - Sprint Exception Process: HTML/CSS flowchart.
+        - Commit Convention: Interactive Commit Message Builder.
+        - Directory Structure: Clickable nested list diagram.
+        - ✨ AI Jira Ticket Generator: Text Input -> Goal: Automate -> Viz: Markdown Output -> Interaction: User prompt triggers Gemini API -> Justification: Reduces manual work and standardizes ticket creation. -> Library: Gemini API.
+        - ✨ AI Code Reviewer: Code Input -> Goal: Improve Quality -> Viz: Markdown suggestions -> Interaction: User code + handbook rules prompt Gemini API -> Justification: Reinforces coding standards and educates developers. -> Library: Gemini API.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #f8fafc;
+        }
+        .tab-button {
+            transition: all 0.3s ease;
+        }
+        .tab-button.active {
+            background-color: #4f46e5;
+            color: white;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+        .content-section {
+            display: none;
+        }
+        .content-section.active {
+            display: block;
+        }
+        .card {
+            background-color: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+            transition: all 0.3s ease;
+        }
+        .card:hover {
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -2px rgb(0 0 0 / 0.1);
+        }
+        .accordion-header {
+            cursor: pointer;
+        }
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-in-out;
+        }
+        .accordion-content.open {
+            max-height: 2000px; /* Increased max-height for longer content */
+        }
+        .hierarchy-item {
+            cursor: pointer;
+        }
+        .inline-code {
+            background-color: #e2e8f0;
+            color: #4338ca;
+            font-family: monospace;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+        pre code.hljs {
+            border-radius: 0.5rem;
+            padding: 1rem;
+            font-size: 0.9em;
+            line-height: 1.5;
+        }
+        .ai-output h1, .ai-output h2, .ai-output h3 {
+            font-weight: bold;
+            margin-top: 1rem;
+            margin-bottom: 0.5rem;
+        }
+        .ai-output h1 { font-size: 1.5rem; }
+        .ai-output h2 { font-size: 1.25rem; }
+        .ai-output h3 { font-size: 1.1rem; }
+        .ai-output ul { list-style-type: disc; margin-left: 1.5rem; }
+        .ai-output ol { list-style-type: decimal; margin-left: 1.5rem; }
+        .ai-output p { margin-bottom: 0.5rem; }
+        .ai-output code { background-color: #e2e8f0; color: #4338ca; font-family: monospace; padding: 2px 6px; border-radius: 4px; }
+        .ai-output pre code { padding: 1rem; }
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #4f46e5;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="text-slate-800">
+
+    <div class="container mx-auto p-4 md:p-8 max-w-7xl">
+        
+        <header class="text-center mb-8 md:mb-12">
+            <h1 class="text-4xl md:text-5xl font-bold text-slate-900">Flutter 팀 핸드북</h1>
+            <p class="mt-4 text-lg text-slate-600">원칙부터 실행까지, 우리 팀의 개발 표준 가이드</p>
+        </header>
+
+        <nav class="flex justify-center mb-8">
+            <div class="flex space-x-1 md:space-x-2 bg-slate-200 p-2 rounded-full">
+                <button class="tab-button active text-sm md:text-base font-semibold py-2 px-4 md:px-6 rounded-full" data-tab="philosophy">철학 및 관리</button>
+                <button class="tab-button text-sm md:text-base font-semibold py-2 px-4 md:px-6 rounded-full" data-tab="sop">개발 표준 (SOP)</button>
+                <button class="tab-button text-sm md:text-base font-semibold py-2 px-4 md:px-6 rounded-full" data-tab="quick-ref">빠른 참조</button>
+                <button class="tab-button text-sm md:text-base font-semibold py-2 px-4 md:px-6 rounded-full" data-tab="ai-assistant">✨ AI 어시스턴트</button>
+            </div>
+        </nav>
+
+        <main>
+            <!-- 철학 및 관리 섹션 -->
+            <section id="philosophy" class="content-section active">
+                <div class="text-center mb-10">
+                    <h2 class="text-3xl font-bold text-slate-800">Chapter 1: 프로젝트 철학 및 관리</h2>
+                    <p class="mt-2 text-slate-500">우리는 예측 불가능한 상황에 휘둘리지 않고, 약속한 것을 꾸준히 전달하며, 함께 성장하는 팀을 지향합니다.</p>
+                </div>
+                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <div class="card p-6">
+                        <h3 class="text-xl font-bold mb-4">1.1. 작업 분리의 원칙 (Jira)</h3>
+                        <p class="text-slate-600 mb-4">모든 작업은 Jira 티켓으로 관리하며, 목적과 범위에 따라 명확하게 구조화합니다. 아래 항목을 클릭하여 설명을 확인하세요.</p>
+                        <div class="space-y-2 text-left">
+                            <div class="hierarchy-item p-3 bg-indigo-50 rounded-lg" data-target="desc-epic">
+                                <span class="font-bold text-indigo-800">에픽 (Epic)</span>
+                                <p id="desc-epic" class="text-sm text-slate-700 mt-1 hidden">여러 스프린트에 걸쳐 진행될 수 있는 큰 규모의 기능 묶음입니다.</p>
+                            </div>
+                            <div class="pl-4 border-l-2 border-indigo-200">
+                                <div class="hierarchy-item p-3 bg-indigo-50 rounded-lg" data-target="desc-story">
+                                    <span class="font-bold text-indigo-800">스토리 (Story)</span>
+                                    <p id="desc-story" class="text-sm text-slate-700 mt-1 hidden">사용자에게 하나의 완결된 가치를 제공하는 기능 단위입니다.</p>
+                                </div>
+                                <div class="pl-4 border-l-2 border-indigo-200">
+                                    <div class="hierarchy-item p-3 bg-indigo-50 rounded-lg" data-target="desc-task">
+                                        <span class="font-bold text-indigo-800">작업 (Task)</span>
+                                        <p id="desc-task" class="text-sm text-slate-700 mt-1 hidden">사용자 시나리오로 표현하기 어려운 순수 기술 업무입니다.</p>
+                                    </div>
+                                    <div class="pl-4 border-l-2 border-indigo-200">
+                                        <div class="hierarchy-item p-3 bg-indigo-50 rounded-lg" data-target="desc-subtask">
+                                            <span class="font-bold text-indigo-800">하위 작업 (Sub-task)</span>
+                                            <p id="desc-subtask" class="text-sm text-slate-700 mt-1 hidden">하나의 스토리를 완료하기 위한 구체적인 개발 단계입니다.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card p-6">
+                        <h3 class="text-xl font-bold mb-4">1.2. 현실적인 계획 수립</h3>
+                        <p class="text-slate-600 mb-4">우리는 '시간'이 아닌 '상대적 크기(스토리 포인트)'로 작업량을 예측하여 압박감과 부정확성을 줄입니다. 데이터 기반의 계획을 통해 팀의 지속 가능한 성장을 추구합니다.</p>
+                        <div class="p-4 bg-slate-50 rounded-lg">
+                            <p class="font-semibold text-slate-700">속도 (Velocity)</p>
+                            <p class="text-sm text-slate-600">한 스프린트에서 우리 팀이 '완료'한 스토리 포인트의 총합입니다. 이는 다음 스프린트 계획의 근거가 됩니다.</p>
+                        </div>
+                    </div>
+                    <div class="card p-6">
+                        <h3 class="text-xl font-bold mb-4">1.3. 스프린트 보호 및 예외 처리</h3>
+                        <p class="text-slate-600 mb-4">스프린트는 팀의 약속이자 방패입니다. 예상치 못한 작업 발생 시, 아래의 절차에 따라 체계적으로 대응합니다.</p>
+                        <div class="space-y-3">
+                            <div class="flex items-start">
+                                <div class="flex-shrink-0 w-8 h-8 bg-indigo-500 text-white rounded-full flex items-center justify-center font-bold">1</div>
+                                <p class="ml-4 text-slate-700"><span class="font-bold">발견 즉시 공유:</span> 이슈를 발견하면 즉시 팀에 알리고 Jira 티켓을 생성합니다.</p>
+                            </div>
+                            <div class="flex items-start">
+                                <div class="flex-shrink-0 w-8 h-8 bg-indigo-500 text-white rounded-full flex items-center justify-center font-bold">2</div>
+                                <p class="ml-4 text-slate-700"><span class="font-bold">영향 분석:</span> 긴급성, 중요도, 예상 소요 시간을 팀과 함께 분석합니다.</p>
+                            </div>
+                            <div class="flex items-start">
+                                <div class="flex-shrink-0 w-8 h-8 bg-indigo-500 text-white rounded-full flex items-center justify-center font-bold">3</div>
+                                <p class="ml-4 text-slate-700"><span class="font-bold">처리 결정:</span> 분석 결과에 따라 '즉시 처리', '백로그 이동', 또는 '거래(Trade-off)'를 결정합니다.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 개발 표준 섹션 -->
+            <section id="sop" class="content-section">
+                <div class="text-center mb-10">
+                    <h2 class="text-3xl font-bold text-slate-800">Chapter 2: 개발 표준 작업 절차 (SOP)</h2>
+                    <p class="mt-2 text-slate-500">하나의 Jira 티켓을 처리하는 전체 과정과 그 과정에서 지켜야 할 모든 기술 규칙입니다.</p>
+                </div>
+
+                <div class="space-y-4">
+                    <div class="card">
+                        <div class="accordion-header p-6 flex justify-between items-center">
+                            <h3 class="text-xl font-bold">2.1. Git & 커밋 컨벤션</h3>
+                            <span class="transform transition-transform duration-300">▼</span>
+                        </div>
+                        <div class="accordion-content px-6 pb-6">
+                            <p class="mb-4 text-slate-600">일관된 히스토리 관리를 위해 다음 규칙을 준수합니다.</p>
+                            <ul class="list-disc list-inside space-y-2 text-slate-700">
+                                <li><strong>브랜치 전략:</strong> <code class="inline-code">main</code> → <code class="inline-code">dev</code> → <code class="inline-code">feature/티켓번호</code></li>
+                                <li><strong>커밋 메시지 형식:</strong> <code class="inline-code">[티켓번호] 타입: 설명</code></li>
+                                <li><strong>커밋 메시지 수정:</strong> <code class="inline-code">git commit --amend</code></li>
+                                <li><strong>강제 옵션 금지:</strong> <code class="inline-code">git push -f</code> 등 절대 사용 금지</li>
+                            </ul>
+                            <div class="mt-4 overflow-x-auto">
+                                <table class="w-full text-left border-collapse">
+                                    <thead class="bg-slate-100">
+                                        <tr>
+                                            <th class="p-2 border border-slate-200">타입</th>
+                                            <th class="p-2 border border-slate-200">설명</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr><td class="p-2 border border-slate-200"><code class="inline-code">feat</code></td><td class="p-2 border border-slate-200">새로운 기능 추가</td></tr>
+                                        <tr><td class="p-2 border border-slate-200"><code class="inline-code">fix</code></td><td class="p-2 border border-slate-200">버그 수정</td></tr>
+                                        <tr><td class="p-2 border border-slate-200"><code class="inline-code">docs</code></td><td class="p-2 border border-slate-200">문서 수정</td></tr>
+                                        <tr><td class="p-2 border border-slate-200"><code class="inline-code">style</code></td><td class="p-2 border border-slate-200">코드 포맷팅 등 (기능 변경 없음)</td></tr>
+                                        <tr><td class="p-2 border border-slate-200"><code class="inline-code">refactor</code></td><td class="p-2 border border-slate-200">코드 리팩토링</td></tr>
+                                        <tr><td class="p-2 border border-slate-200"><code class="inline-code">test</code></td><td class="p-2 border border-slate-200">테스트 코드 추가/수정</td></tr>
+                                        <tr><td class="p-2 border border-slate-200"><code class="inline-code">chore</code></td><td class="p-2 border border-slate-200">빌드, 패키지 매니저 설정 등</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="accordion-header p-6 flex justify-between items-center">
+                            <h3 class="text-xl font-bold">2.2. 코드 아키텍처 (Clean Architecture)</h3>
+                            <span class="transform transition-transform duration-300">▼</span>
+                        </div>
+                        <div class="accordion-content px-6 pb-6">
+                            <p class="mb-4 text-slate-600">유지보수와 확장이 용이한 구조를 위해 클린 아키텍처를 따릅니다.</p>
+                            <div class="bg-slate-50 p-4 rounded-lg">
+                                <p class="font-semibold text-slate-700 mb-2">디렉토리 구조</p>
+                                <ul class="list-disc list-inside space-y-1 text-sm">
+                                    <li><code class="inline-code">lib/common/</code>: 전역 위젯, 모델, Provider</li>
+                                    <li><code class="inline-code">lib/features/</code>: 기능 단위 그룹
+                                        <ul class="list-disc list-inside ml-4">
+                                            <li><code class="inline-code">data/</code>: 데이터 소스</li>
+                                            <li><code class="inline-code">domain/</code>: 비즈니스 로직 (Usecase)</li>
+                                            <li><code class="inline-code">presentation/</code>: UI 및 상태 관리 (ViewModel)</li>
+                                        </ul>
+                                    </li>
+                                </ul>
+                            </div>
+                             <div class="mt-4 bg-slate-50 p-4 rounded-lg">
+                                <p class="font-semibold text-slate-700 mb-2">Riverpod 상태 분리 원칙</p>
+                                <ul class="list-disc list-inside space-y-1 text-sm">
+                                    <li><strong>화면 단위 상태:</strong> <code class="inline-code">features/.../view_models/</code>에 위치. <code class="inline-code">autoDispose</code>가 기본.</li>
+                                    <li><strong>전역/공유 상태:</strong> <code class="inline-code">common/presentation/providers/</code>에 위치. <code class="inline-code">keepAlive: true</code>로 상태 유지.</li>
+                                </ul>
+                            </div>
+                            <div class="mt-4">
+                                <pre><code class="language-dart">// 예시: 전역 상태(Session)와 화면 ViewModel(LoginViewModel)의 상호작용
+// 1. 전역 상태 정의
+@Riverpod(keepAlive: true)
+class Session extends _$Session { ... }
+
+// 2. 화면 ViewModel에서 전역 상태 업데이트
+@riverpod
+class LoginViewModel extends _$LoginViewModel {
+  Future<void> login(...) async {
+    // ... 로그인 성공 후 ...
+    ref.read(sessionProvider.notifier).login(user);
+  }
+}
+
+// 3. 다른 화면에서 전역 상태 참조
+class ProfilePage extends ConsumerWidget {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final user = ref.watch(sessionProvider);
+    // ...
+  }
+}</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="accordion-header p-6 flex justify-between items-center">
+                            <h3 class="text-xl font-bold">2.3. 코딩 스타일 및 네이밍</h3>
+                            <span class="transform transition-transform duration-300">▼</span>
+                        </div>
+                        <div class="accordion-content px-6 pb-6">
+                             <ul class="list-disc list-inside space-y-2 text-slate-700">
+                                <li><strong>파일 이름:</strong> <code class="inline-code">snake_case.dart</code></li>
+                                <li><strong>비공개 멤버(Private Members):</strong> 이름 앞에 <code class="inline-code">_</code>를 붙여 해당 파일 외부에서의 접근을 막습니다. 캡슐화를 통해 위젯이나 클래스 내부의 상태와 로직을 보호합니다.
+                                    <div class="mt-2">
+                                        <pre><code class="language-dart">// 예시: StatefulWidget에서 내부 상태 관리
+class MyCheckbox extends StatefulWidget { ... }
+
+class _MyCheckboxState extends State<MyCheckbox> {
+  // _isChecked는 이 State 클래스 외부에서 직접 접근 불가
+  bool _isChecked = false; 
+
+  // _toggleCheckbox 메서드 또한 외부에서 직접 호출 불가
+  void _toggleCheckbox() {
+    setState(() {
+      _isChecked = !_isChecked;
+    });
+  }
+  ...
+}</code></pre>
+                                    </div>
+                                </li>
+                                <li><strong>재사용 가능한 위젯(Reusable Widgets):</strong>
+                                    <p class="my-2">위젯은 독립적이고 재사용 가능하게 작성하여 중복을 줄이고 일관성을 높입니다.</p>
+                                    <p class="font-semibold mt-2">나쁜 예 1: UI 반복</p>
+                                    <pre><code class="language-dart">// ListView 안에서 동일한 구조의 위젯이 반복됨
+ListView.builder(
+  itemCount: users.length,
+  itemBuilder: (context, index) {
+    // 복잡한 위젯 구조가 여기에 그대로 노출됨
+    return Card(
+      child: ListTile(
+        leading: CircleAvatar(child: Text(users[index].name[0])),
+        title: Text(users[index].name),
+        subtitle: Text(users[index].email),
+      ),
+    );
+  },
+);</code></pre>
+                                    <p class="font-semibold mt-2">좋은 예 1: 위젯 추출</p>
+                                    <pre><code class="language-dart">// 반복되는 UI를 별도의 위젯으로 추출
+ListView.builder(
+  itemCount: users.length,
+  itemBuilder: (context, index) {
+    // UserProfileCard 위젯으로 책임을 위임하여 코드가 간결해짐
+    return UserProfileCard(user: users[index]);
+  },
+);
+
+// 재사용 가능한 위젯
+class UserProfileCard extends StatelessWidget {
+  final User user;
+  const UserProfileCard({super.key, required this.user});
+  // ... 위젯 구현
+}</code></pre>
+                                    <p class="font-semibold mt-4">나쁜 예 2: 특정 상태에 의존</p>
+                                    <pre><code class="language-dart">// 위젯이 특정 ViewModel Provider를 직접 참조함
+class UserAvatar extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    // profileViewModelProvider에 강하게 결합되어 다른 곳에서 재사용 불가
+    final user = ref.watch(profileViewModelProvider).user;
+    return CircleAvatar(backgroundImage: NetworkImage(user.avatarUrl));
+  }
+}</code></pre>
+                                    <p class="font-semibold mt-2">좋은 예 2: 데이터 주입</p>
+                                    <pre><code class="language-dart">// 필요한 데이터(avatarUrl)를 생성자를 통해 주입받음
+class UserAvatar extends StatelessWidget {
+  final String avatarUrl;
+  const UserAvatar({super.key, required this.avatarUrl});
+
+  @override
+  Widget build(BuildContext context) {
+    // 주입받은 데이터로 위젯을 그리므로 어디서든 재사용 가능
+    return CircleAvatar(backgroundImage: NetworkImage(avatarUrl));
+  }
+}</code></pre>
+                                </li>
+                                <li><strong>공통 위젯:</strong> 여러 화면에서 사용될 공통 위젯은 팀장과 상의 후 <code class="inline-code">/common/presentation/widgets</code> 하위에 <code class="inline-code">app_위젯이름.dart</code> 형식으로 생성/수정합니다.</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="accordion-header p-6 flex justify-between items-center">
+                            <h3 class="text-xl font-bold">2.4. 자원 및 라우팅 관리</h3>
+                            <span class="transform transition-transform duration-300">▼</span>
+                        </div>
+                        <div class="accordion-content px-6 pb-6">
+                            <p class="mb-4 text-slate-600">앱의 자원과 경로를 중앙에서 관리하여 일관성을 유지하고 추후 유지보수를 용이하게 합니다.</p>
+                             <ul class="list-disc list-inside space-y-2 text-slate-700">
+                                <li><strong>이미지:</strong> 모든 이미지 경로는 <code class="inline-code">/core/constants/app_images.dart</code>에 <code class="inline-code">static const</code> 문자열로 정의 후 참조합니다.</li>
+                                <li><strong>문자열:</strong> UI에 표시되는 모든 텍스트는 <code class="inline-code">/core/constants/app_strings.dart</code>에 정의 후 참조합니다. (국제화 대응)</li>
+                                <li><strong>경로 이름 (GoRouter):</strong> 모든 라우트 경로는 <code class="inline-code">/core/constants/app_routes.dart</code>에 정의합니다.</li>
+                                <li><strong>라우터 설정:</strong> 새로운 화면 추가 시, <code class="inline-code">/core/router/router.dart</code> 파일에 <code class="inline-code">GoRoute()</code>를 추가하여 경로를 등록합니다.</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="accordion-header p-6 flex justify-between items-center">
+                            <h3 class="text-xl font-bold">2.5. 표준 작업 절차 (Step-by-Step)</h3>
+                            <span class="transform transition-transform duration-300">▼</span>
+                        </div>
+                        <div class="accordion-content px-6 pb-6">
+                            <ol class="relative border-l border-slate-200 space-y-8 ml-2 mt-4">
+                                <li class="ml-6">
+                                    <span class="absolute flex items-center justify-center w-6 h-6 bg-indigo-200 rounded-full -left-3 ring-8 ring-white">1</span>
+                                    <h4 class="font-bold">작업 가져오기</h4>
+                                    <p class="text-sm text-slate-600">Jira 티켓을 'In Progress'로 이동하고 착수일을 기록합니다.</p>
+                                </li>
+                                <li class="ml-6">
+                                    <span class="absolute flex items-center justify-center w-6 h-6 bg-indigo-200 rounded-full -left-3 ring-8 ring-white">2</span>
+                                    <h4 class="font-bold">사전 확인</h4>
+                                    <p class="text-sm text-slate-600">요구사항, Figma 디자인, 공통 위젯 존재 여부를 확인합니다.</p>
+                                </li>
+                                <li class="ml-6">
+                                    <span class="absolute flex items-center justify-center w-6 h-6 bg-indigo-200 rounded-full -left-3 ring-8 ring-white">3</span>
+                                    <h4 class="font-bold">구현</h4>
+                                    <p class="text-sm text-slate-600">모든 개발 컨벤션을 준수하여 코드를 작성합니다.</p>
+                                </li>
+                                <li class="ml-6">
+                                    <span class="absolute flex items-center justify-center w-6 h-6 bg-indigo-200 rounded-full -left-3 ring-8 ring-white">4</span>
+                                    <h4 class="font-bold">코드 제출 및 리뷰</h4>
+                                    <p class="text-sm text-slate-600">커밋 후 Pull Request(PR)를 생성하고 리뷰를 요청합니다.</p>
+                                </li>
+                                <li class="ml-6">
+                                    <span class="absolute flex items-center justify-center w-6 h-6 bg-indigo-200 rounded-full -left-3 ring-8 ring-white">5</span>
+                                    <h4 class="font-bold">작업 완료</h4>
+                                    <p class="text-sm text-slate-600">리뷰 승인 및 Merge 후 Jira 티켓을 'Done'으로 이동합니다.</p>
+                                </li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 빠른 참조 섹션 -->
+            <section id="quick-ref" class="content-section">
+                <div class="text-center mb-10">
+                    <h2 class="text-3xl font-bold text-slate-800">빠른 참조 (Quick Reference)</h2>
+                    <p class="mt-2 text-slate-500">가장 자주 필요한 규칙과 도구를 빠르게 확인하세요.</p>
+                </div>
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div class="card p-6">
+                        <h3 class="text-xl font-bold mb-4">커밋 메시지 빌더</h3>
+                        <p class="text-slate-600 mb-4">아래 필드를 채워 표준 커밋 메시지를 생성하세요.</p>
+                        <div class="space-y-4">
+                            <div>
+                                <label for="ticket-number" class="block text-sm font-medium text-slate-700">티켓 번호 (예: BA-09)</label>
+                                <input type="text" id="ticket-number" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                            </div>
+                            <div>
+                                <label for="commit-type" class="block text-sm font-medium text-slate-700">커밋 타입</label>
+                                <select id="commit-type" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                                    <option>feat</option>
+                                    <option>fix</option>
+                                    <option>docs</option>
+                                    <option>style</option>
+                                    <option>refactor</option>
+                                    <option>test</option>
+                                    <option>chore</option>
+                                </select>
+                            </div>
+                             <div>
+                                <label for="commit-desc" class="block text-sm font-medium text-slate-700">설명</label>
+                                <input type="text" id="commit-desc" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                            </div>
+                            <button id="generate-commit" class="w-full bg-indigo-600 text-white font-bold py-2 px-4 rounded-md hover:bg-indigo-700 transition-colors">생성하기</button>
+                            <div class="mt-4 p-4 bg-slate-100 rounded-md">
+                                <p class="text-sm text-slate-500">생성된 커밋 메시지:</p>
+                                <code id="commit-output" class="block bg-slate-200 p-2 rounded mt-1 text-slate-800 break-words"></code>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card p-6">
+                        <h3 class="text-xl font-bold mb-4">신규 작업 체크리스트</h3>
+                        <p class="text-slate-600 mb-4">새로운 작업을 시작할 때 아래 절차를 따르세요.</p>
+                        <div class="space-y-3">
+                            <label class="flex items-center">
+                                <input type="checkbox" class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                                <span class="ml-3 text-slate-700">Jira 티켓 'In Progress'로 이동 및 담당자 할당</span>
+                            </label>
+                             <label class="flex items-center">
+                                <input type="checkbox" class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                                <span class="ml-3 text-slate-700"><code class="inline-code">feature/티켓번호</code> 브랜치 생성</span>
+                            </label>
+                             <label class="flex items-center">
+                                <input type="checkbox" class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                                <span class="ml-3 text-slate-700">Figma 및 공통 위젯 확인</span>
+                            </label>
+                             <label class="flex items-center">
+                                <input type="checkbox" class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                                <span class="ml-3 text-slate-700">아키텍처 및 코딩 스타일 준수하며 구현</span>
+                            </label>
+                             <label class="flex items-center">
+                                <input type="checkbox" class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                                <span class="ml-3 text-slate-700">커밋 컨벤션에 맞춰 커밋</span>
+                            </label>
+                             <label class="flex items-center">
+                                <input type="checkbox" class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                                <span class="ml-3 text-slate-700">Pull Request 생성 및 리뷰 요청</span>
+                            </label>
+                             <label class="flex items-center">
+                                <input type="checkbox" class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                                <span class="ml-3 text-slate-700">Merge 후 Jira 티켓 'Done'으로 이동</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- AI 어시스턴트 섹션 -->
+            <section id="ai-assistant" class="content-section">
+                <div class="text-center mb-10">
+                    <h2 class="text-3xl font-bold text-slate-800">✨ AI 어시스턴트</h2>
+                    <p class="mt-2 text-slate-500">Gemini AI를 활용하여 개발 생산성을 높여보세요.</p>
+                </div>
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div class="card p-6">
+                        <h3 class="text-xl font-bold mb-4">Jira 스토리 자동 생성</h3>
+                        <p class="text-slate-600 mb-4">구현할 기능에 대한 간단한 설명을 입력하면, 핸드북 규칙에 맞는 Jira 스토리 티켓 초안을 생성해줍니다.</p>
+                        <div>
+                            <label for="jira-prompt" class="block text-sm font-medium text-slate-700">기능 설명</label>
+                            <textarea id="jira-prompt" rows="4" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" placeholder="예: 이메일과 비밀번호를 사용한 소셜 로그인 기능"></textarea>
+                        </div>
+                        <button id="generate-jira" class="mt-4 w-full bg-indigo-600 text-white font-bold py-2 px-4 rounded-md hover:bg-indigo-700 transition-colors flex items-center justify-center">
+                            <span class="btn-text">생성하기</span>
+                            <div class="loader hidden ml-2"></div>
+                        </button>
+                        <div class="mt-4 p-4 bg-slate-100 rounded-md min-h-[100px]">
+                            <p class="text-sm text-slate-500 mb-2">생성된 Jira 티켓:</p>
+                            <div id="jira-output" class="ai-output text-sm text-slate-800 prose"></div>
+                        </div>
+                    </div>
+                    <div class="card p-6">
+                        <h3 class="text-xl font-bold mb-4">AI 코드 리뷰어</h3>
+                        <p class="text-slate-600 mb-4">작성한 Dart 코드를 붙여넣으면, 우리 팀의 핸드북 규칙에 기반하여 개선점을 제안해줍니다.</p>
+                        <div>
+                            <label for="code-review-input" class="block text-sm font-medium text-slate-700">리뷰할 Dart 코드</label>
+                            <textarea id="code-review-input" rows="10" class="mt-1 block w-full px-3 py-2 bg-slate-800 text-slate-200 font-mono text-sm border border-slate-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" placeholder="class MyWidget extends StatelessWidget { ... }"></textarea>
+                        </div>
+                        <button id="generate-review" class="mt-4 w-full bg-indigo-600 text-white font-bold py-2 px-4 rounded-md hover:bg-indigo-700 transition-colors flex items-center justify-center">
+                            <span class="btn-text">리뷰 요청</span>
+                            <div class="loader hidden ml-2"></div>
+                        </button>
+                        <div class="mt-4 p-4 bg-slate-100 rounded-md min-h-[100px]">
+                            <p class="text-sm text-slate-500 mb-2">AI 리뷰 코멘트:</p>
+                            <div id="review-output" class="ai-output text-sm text-slate-800 prose"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            hljs.highlightAll();
+            
+            const handbookContentForAI = document.documentElement.innerText;
+
+            const tabs = document.querySelectorAll('.tab-button');
+            const contents = document.querySelectorAll('.content-section');
+
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    tabs.forEach(item => item.classList.remove('active'));
+                    tab.classList.add('active');
+
+                    const target = tab.getAttribute('data-tab');
+                    contents.forEach(content => {
+                        if (content.id === target) {
+                            content.classList.add('active');
+                        } else {
+                            content.classList.remove('active');
+                        }
+                    });
+                });
+            });
+
+            const accordions = document.querySelectorAll('.accordion-header');
+            accordions.forEach(accordion => {
+                accordion.addEventListener('click', () => {
+                    const content = accordion.nextElementSibling;
+                    const icon = accordion.querySelector('span');
+                    
+                    content.classList.toggle('open');
+                    if(icon) icon.classList.toggle('rotate-180');
+                });
+            });
+            
+            const hierarchyItems = document.querySelectorAll('.hierarchy-item');
+            hierarchyItems.forEach(item => {
+                item.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const targetId = item.getAttribute('data-target');
+                    const targetElement = document.getElementById(targetId);
+                    if (targetElement) {
+                        targetElement.classList.toggle('hidden');
+                    }
+                });
+            });
+
+            const generateCommitBtn = document.getElementById('generate-commit');
+            generateCommitBtn.addEventListener('click', () => {
+                const ticket = document.getElementById('ticket-number').value.trim();
+                const type = document.getElementById('commit-type').value;
+                const desc = document.getElementById('commit-desc').value.trim();
+                const output = document.getElementById('commit-output');
+
+                if (!ticket || !desc) {
+                    output.textContent = '티켓 번호와 설명을 모두 입력해주세요.';
+                    return;
+                }
+
+                output.textContent = `[${ticket}] ${type}: ${desc}`;
+            });
+
+            const generateJiraBtn = document.getElementById('generate-jira');
+            const jiraPromptInput = document.getElementById('jira-prompt');
+            const jiraOutputDiv = document.getElementById('jira-output');
+
+            generateJiraBtn.addEventListener('click', async () => {
+                const promptText = jiraPromptInput.value.trim();
+                if (!promptText) {
+                    jiraOutputDiv.innerHTML = '<p>생성할 기능에 대한 설명을 입력해주세요.</p>';
+                    return;
+                }
+
+                const fullPrompt = `
+                    You are an expert Flutter project manager. Based on the provided team handbook and a user's feature request, create a detailed Jira ticket in KOREAN.
+                    The ticket must be structured as a User Story with a clear description, acceptance criteria, and a list of specific sub-tasks for the developer.
+                    
+                    **Team Handbook Context:**
+                    ${handbookContentForAI}
+
+                    **User's Feature Request:**
+                    "${promptText}"
+
+                    **Your Task:**
+                    Generate a Jira ticket in Markdown format. The structure should be:
+                    - **[스토리]** Story Title
+                    - **설명:** A detailed description of the feature from a user's perspective.
+                    - **완료 조건 (Acceptance Criteria):** A numbered list of conditions that must be met for the story to be considered complete.
+                    - **하위 작업 (Sub-tasks):** A list of concrete technical sub-tasks required to implement the story.
+                `;
+
+                toggleButtonLoading(generateJiraBtn, true);
+                jiraOutputDiv.innerHTML = '';
+
+                try {
+                    const resultText = await callGemini(fullPrompt);
+                    jiraOutputDiv.innerHTML = marked.parse(resultText);
+                } catch (error) {
+                    console.error('Error calling Gemini API:', error);
+                    jiraOutputDiv.innerHTML = '<p>Jira 티켓 생성 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.</p>';
+                } finally {
+                    toggleButtonLoading(generateJiraBtn, false);
+                }
+            });
+
+            const generateReviewBtn = document.getElementById('generate-review');
+            const codeReviewInput = document.getElementById('code-review-input');
+            const reviewOutputDiv = document.getElementById('review-output');
+
+            generateReviewBtn.addEventListener('click', async () => {
+                const codeText = codeReviewInput.value.trim();
+                if (!codeText) {
+                    reviewOutputDiv.innerHTML = '<p>리뷰할 코드를 입력해주세요.</p>';
+                    return;
+                }
+
+                const fullPrompt = `
+                    You are an expert Flutter developer and a strict code reviewer. Your task is to review the provided Dart code snippet based ONLY on the rules and conventions defined in the team's handbook.
+                    Provide constructive feedback in KOREAN, pointing out specific violations and suggesting improvements.
+
+                    **Team Handbook Context (Your ONLY source of rules):**
+                    ${handbookContentForAI}
+
+                    **Code to Review:**
+                    \`\`\`dart
+                    ${codeText}
+                    \`\`\`
+
+                    **Your Task:**
+                    Generate a code review in Markdown format. For each finding, specify which rule from the handbook was violated and suggest a corrected version of the code if applicable. If there are no violations, state that the code adheres well to the team's standards.
+                `;
+
+                toggleButtonLoading(generateReviewBtn, true);
+                reviewOutputDiv.innerHTML = '';
+
+                try {
+                    const resultText = await callGemini(fullPrompt);
+                    reviewOutputDiv.innerHTML = marked.parse(resultText);
+                } catch (error) {
+                    console.error('Error calling Gemini API:', error);
+                    reviewOutputDiv.innerHTML = '<p>코드 리뷰 생성 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.</p>';
+                } finally {
+                    toggleButtonLoading(generateReviewBtn, false);
+                }
+            });
+
+            function toggleButtonLoading(button, isLoading) {
+                const btnText = button.querySelector('.btn-text');
+                const loader = button.querySelector('.loader');
+                if (isLoading) {
+                    button.disabled = true;
+                    btnText.classList.add('hidden');
+                    loader.classList.remove('hidden');
+                } else {
+                    button.disabled = false;
+                    btnText.classList.remove('hidden');
+                    loader.classList.add('hidden');
+                }
+            }
+            
+            async function callGemini(prompt) {
+                let chatHistory = [];
+                chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+                const payload = { contents: chatHistory };
+                const apiKey = ""; 
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+                
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`API call failed with status: ${response.status}`);
+                }
+
+                const result = await response.json();
+
+                if (result.candidates && result.candidates.length > 0 &&
+                    result.candidates[0].content && result.candidates[0].content.parts &&
+                    result.candidates[0].content.parts.length > 0) {
+                    return result.candidates[0].content.parts[0].text;
+                } else {
+                    throw new Error('Unexpected response format from API.');
+                }
+            }
+        });
+    </script>
+</body>
+</html>

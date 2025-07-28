@@ -244,12 +244,34 @@
                         </div>
                         <div class="accordion-content px-6 pb-6">
                             <p class="mb-4 text-slate-600">일관된 히스토리 관리를 위해 다음 규칙을 준수합니다.</p>
-                            <ul class="list-disc list-inside space-y-2 text-slate-700">
-                                <li><strong>브랜치 전략:</strong> <code class="inline-code">main</code> → <code class="inline-code">dev</code> → <code class="inline-code">feature/티켓번호</code></li>
-                                <li><strong>커밋 메시지 형식:</strong> <code class="inline-code">[티켓번호] 타입: 설명</code></li>
-                                <li><strong>커밋 메시지 수정:</strong> <code class="inline-code">git commit --amend</code></li>
-                                <li><strong>강제 옵션 금지:</strong> <code class="inline-code">git push -f</code> 등 절대 사용 금지</li>
-                            </ul>
+                            <div class="space-y-4 text-slate-700">
+                                <div>
+                                    <h4 class="font-bold text-lg mb-2">브랜치 전략</h4>
+                                    <p class="mb-2">우리는 Git-flow를 기반으로 한 다음 브랜치 전략을 사용합니다: <code class="inline-code">main</code> ← <code class="inline-code">dev</code> ← <code class="inline-code">feat/티켓번호</code></p>
+                                    <ul class="list-disc list-inside space-y-3 pl-2">
+                                        <li>
+                                            <strong class="font-semibold text-slate-800">main 브랜치:</strong>
+                                            <p class="text-sm text-slate-600 pl-4">기획한 동작들이 모두 구현되어 문제가 없는 경우 팀장의 승인 하에 PR이 이루어집니다. 해당 브랜치에 push 하는 경우 자동 스크린샷 촬영 및 앱스토어, 구글 플레이 배포가 일어납니다. <strong class="text-red-600">상의 없는 push는 금지합니다.</strong></p>
+                                        </li>
+                                        <li>
+                                            <strong class="font-semibold text-slate-800">dev 브랜치:</strong>
+                                            <p class="text-sm text-slate-600 pl-4"><code class="inline-code">feat</code> 브랜치의 개발이 끝난 경우 PR을 통해 병합될 통합 브랜치입니다. 상의 없는 merge 기능을 통한 병합은 금지하며, <strong class="text-red-600">반드시 코드 리뷰 후 통합되어야 합니다.</strong></p>
+                                        </li>
+                                        <li>
+                                            <strong class="font-semibold text-slate-800">feat/티켓번호 브랜치:</strong>
+                                            <p class="text-sm text-slate-600 pl-4">JIRA에서 관리하는 코드명을 사용하여 브랜치를 작성합니다. (예: <code class="inline-code">feat/BA-09</code>) 브랜치의 작업이 끝나고 머지될 준비가 된 경우 PR을 통해 <code class="inline-code">dev</code> 브랜치로 머지합니다.</p>
+                                        </li>
+                                    </ul>
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-lg mb-2">커밋 규칙</h4>
+                                    <ul class="list-disc list-inside space-y-2">
+                                        <li><strong>커밋 메시지 형식:</strong> <code class="inline-code">[티켓번호] 타입: 설명</code></li>
+                                        <li><strong>커밋 메시지 수정:</strong> <code class="inline-code">git commit --amend</code></li>
+                                        <li><strong>강제 옵션 금지:</strong> <code class="inline-code">git push -f</code> 등 절대 사용 금지</li>
+                                    </ul>
+                                </div>
+                            </div>
                             <div class="mt-4 overflow-x-auto">
                                 <table class="w-full text-left border-collapse">
                                     <thead class="bg-slate-100">
@@ -515,7 +537,7 @@ class UserAvatar extends StatelessWidget {
                             </label>
                              <label class="flex items-center">
                                 <input type="checkbox" class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
-                                <span class="ml-3 text-slate-700"><code class="inline-code">feature/티켓번호</code> 브랜치 생성</span>
+                                <span class="ml-3 text-slate-700"><code class="inline-code">feat/티켓번호</code> 브랜치 생성</span>
                             </label>
                              <label class="flex items-center">
                                 <input type="checkbox" class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
